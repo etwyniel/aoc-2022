@@ -27,8 +27,3 @@ impl Part for Part2 {
         Ok(0)
     }
 }
-
-pub fn run(session_key: &str) {
-    run_and_display::<Part1>(session_key);
-    run_and_display::<Part2>(session_key);
-}

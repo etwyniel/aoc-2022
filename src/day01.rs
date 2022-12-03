@@ -4,7 +4,7 @@ use aoc_framework::*;
 
 pub struct Day1;
 
-impl_day!(Day1: 2022[1], r"
+impl_day!(Day1::{Part1, Part2}: 2022[1], r"
 1000
 2000
 3000
@@ -68,9 +68,4 @@ impl Part for Part2 {
             })
             .map(|(_, top)| top.iter().sum())
     }
-}
-
-pub fn run(session_key: &str) {
-    run_and_display::<Part1>(session_key);
-    run_and_display::<Part2>(session_key);
 }
