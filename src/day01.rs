@@ -26,9 +26,9 @@ pub struct Part1;
 impl Part for Part1 {
     type D = Day1;
     const N: u8 = 1;
-    const EXAMPLE_RESULT: Option<u64> = Some(24000);
+    const EXAMPLE_RESULT: Option<Answer> = Some(Num(24000));
 
-    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<u64> {
+    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
         let mut max = 0;
         let mut current = 0;
         // Add empty line to ensure last value is used
@@ -41,7 +41,7 @@ impl Part for Part1 {
             current += line.parse::<u64>()?;
         }
 
-        Ok(max)
+        Ok(Num(max))
     }
 }
 
@@ -50,9 +50,9 @@ pub struct Part2;
 impl Part for Part2 {
     type D = Day1;
     const N: u8 = 2;
-    const EXAMPLE_RESULT: Option<u64> = Some(45000);
+    const EXAMPLE_RESULT: Option<Answer> = Some(Num(45000));
 
-    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<u64> {
+    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
         input
             .chain(once(String::new())) // Add empty line to ensure last value is used
             .try_fold((0, Vec::with_capacity(4)), |(current, mut top), line| {
@@ -66,6 +66,6 @@ impl Part for Part2 {
                 top.truncate(3);
                 Ok((0, top))
             })
-            .map(|(_, top)| top.iter().sum())
+            .map(|(_, top)| Num(top.iter().sum()))
     }
 }

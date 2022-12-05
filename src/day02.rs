@@ -1,9 +1,6 @@
 use std::{fmt::Debug, str::FromStr};
 
-use aoc_framework::{
-    anyhow::{bail, ensure},
-    *,
-};
+use aoc_framework::{anyhow::bail, *};
 
 pub struct Day2;
 
@@ -47,10 +44,10 @@ pub struct Part1;
 impl Part for Part1 {
     type D = Day2;
     const N: u8 = 1;
-    const EXAMPLE_RESULT: Option<u64> = Some(15);
+    const EXAMPLE_RESULT: Option<Answer> = Some(Num(15));
 
-    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<u64> {
-        Ok(input
+    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
+        Ok(Num(input
             .map(|line| parse_tuple(&line))
             .map(|(l, r): (RockPaperScissors, RockPaperScissors)| {
                 r as i8
@@ -62,7 +59,7 @@ impl Part for Part1 {
                     }
             })
             .map(|v| v as u64)
-            .sum())
+            .sum()))
     }
 }
 
@@ -90,10 +87,10 @@ pub struct Part2;
 impl Part for Part2 {
     type D = Day2;
     const N: u8 = 2;
-    const EXAMPLE_RESULT: Option<u64> = Some(12);
+    const EXAMPLE_RESULT: Option<Answer> = Some(Num(12));
 
-    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<u64> {
-        Ok(input
+    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
+        Ok(Num(input
             .map(|line| parse_tuple(&line))
             .map(|(l, r): (RockPaperScissors, DesiredResult)| match r {
                 DesiredResult::Lose => (l as i8 - 2).rem_euclid(3) + 1,
@@ -101,6 +98,6 @@ impl Part for Part2 {
                 DesiredResult::Win => 6 + (l as i8 % 3) + 1,
             })
             .map(|v| v as u64)
-            .sum())
+            .sum()))
     }
 }

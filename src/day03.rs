@@ -27,16 +27,16 @@ pub struct Part1;
 impl Part for Part1 {
     type D = Day3;
     const N: u8 = 1;
-    const EXAMPLE_RESULT: Option<u64> = Some(157);
+    const EXAMPLE_RESULT: Option<Answer> = Some(Num(157));
 
-    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<u64> {
-        Ok(input
+    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
+        Ok(Num(input
             .map(|line| {
                 let (l, r) = line.as_bytes().split_at(line.len() / 2);
                 let (l, r) = (digest(l), digest(r));
                 (l & r).trailing_zeros() as u64 + 1
             })
-            .sum())
+            .sum()))
     }
 }
 
@@ -45,10 +45,10 @@ pub struct Part2;
 impl Part for Part2 {
     type D = Day3;
     const N: u8 = 2;
-    const EXAMPLE_RESULT: Option<u64> = Some(70);
+    const EXAMPLE_RESULT: Option<Answer> = Some(Num(70));
 
-    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<u64> {
-        Ok(input
+    fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
+        Ok(Num(input
             .chunks(3)
             .into_iter()
             .map(|chunk| {
@@ -58,6 +58,6 @@ impl Part for Part2 {
                     .trailing_zeros() as u64
                     + 1
             })
-            .sum())
+            .sum()))
     }
 }

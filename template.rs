@@ -2,12 +2,12 @@ use aoc_framework::*;
 
 pub struct DayN;
 
-impl_day!(DayN: 2022[0], r"");
+impl_day!(DayN::{Part1, Part2}: 2022[N], r"");
 
 pub struct Part1;
 
 impl Part for Part1 {
-    type D = Day1;
+    type D = DayN;
     const N: u8 = 1;
     const EXAMPLE_RESULT: Option<u64> = None;
 
@@ -19,7 +19,7 @@ impl Part for Part1 {
 pub struct Part2;
 
 impl Part for Part2 {
-    type D = Day1;
+    type D = DayN;
     const N: u8 = 2;
     const EXAMPLE_RESULT: Option<u64> = None;
 
