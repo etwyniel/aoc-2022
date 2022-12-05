@@ -18,7 +18,7 @@ dependencies = [
 [[package]]
 name = "aoc-framework"
 version = "0.1.0"
-source = "git+https://github.com/etwyniel/aoc-framework#9170d815846b5270f7cf2a5f20f6c819b4005e8c"
+source = "git+https://github.com/etwyniel/aoc-framework#2669e7a5430ff44142b2a10094e5ae77d9197f55"
 dependencies = [
  "anyhow",
  "itertools",
