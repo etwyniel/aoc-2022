@@ -5,11 +5,21 @@ pub struct Day6;
 
 impl_day!(Day6::{Part1, Part2}: 2022[6], r"mjqjpqmgbljsphdztnvjfqwrcgsmlb");
 
+// faster than Itertools::all_unique
+fn all_unique(chunk: &[u8]) -> bool {
+    let mut mask = 0u32;
+    chunk
+        .iter()
+        .copied()
+        .for_each(|b| mask |= 1 << (b'a' - b) as usize);
+    mask.count_ones() as usize == chunk.len()
+}
+
 fn first_unique_chunk<const N: usize>(s: &str) -> anyhow::Result<Answer> {
     s.as_bytes()
         .windows(N)
         .enumerate()
-        .find(|(_, chunk)| chunk.iter().all_unique())
+        .find(|(_, chunk)| all_unique(chunk))
         .map(|(i, _)| Num(i as u64 + N as u64))
         .ok_or_else(|| anyhow!("No solution found"))
 }
