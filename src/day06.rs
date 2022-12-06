@@ -11,7 +11,7 @@ fn all_unique(chunk: &[u8]) -> bool {
     chunk
         .iter()
         .copied()
-        .for_each(|b| mask |= 1 << (b'a' - b) as usize);
+        .for_each(|b| mask |= 1 << (b - b'a') as usize);
     mask.count_ones() as usize == chunk.len()
 }
 
