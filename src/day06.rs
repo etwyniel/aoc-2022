@@ -7,12 +7,11 @@ impl_day!(Day6::{Part1, Part2}: 2022[6], r"mjqjpqmgbljsphdztnvjfqwrcgsmlb");
 
 // faster than Itertools::all_unique
 fn all_unique(chunk: &[u8]) -> bool {
-    let mut mask = 0u32;
     chunk
         .iter()
-        .copied()
-        .for_each(|b| mask |= 1 << (b - b'a') as usize);
-    mask.count_ones() as usize == chunk.len()
+        .fold(0u32, |mask, b| mask | (1 << (*b - b'a') as usize))
+        .count_ones() as usize
+        == chunk.len()
 }
 
 fn first_unique_chunk<const N: usize>(s: &str) -> anyhow::Result<Answer> {
