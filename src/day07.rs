@@ -50,6 +50,7 @@ impl Entry {
         }
     }
 
+    #[allow(unused)]
     fn size(&self) -> u64 {
         match self {
             Dir { entries, .. } => entries.iter().map(|entry| entry.size()).sum(),
@@ -57,6 +58,7 @@ impl Entry {
         }
     }
 
+    #[allow(unused)]
     fn size_under_100k(&self, sum: &mut u64) -> u64 {
         match self {
             Dir { entries, .. } => {
@@ -70,6 +72,7 @@ impl Entry {
         }
     }
 
+    #[allow(unused)]
     fn size_smallest_over(&self, val: u64, current: &mut Option<u64>) -> u64 {
         match self {
             Dir { entries, .. } => {
@@ -122,6 +125,7 @@ fn pop(stack: &mut Vec<Entry>) -> anyhow::Result<&mut Vec<Entry>> {
     Ok(current)
 }
 
+#[allow(unused)]
 fn build_fs(mut input: impl Iterator<Item = String>) -> anyhow::Result<Entry> {
     ensure!(input.next().as_deref() == Some("$ cd /"));
     let mut stack = vec![Dir {
@@ -164,6 +168,40 @@ fn build_fs(mut input: impl Iterator<Item = String>) -> anyhow::Result<Entry> {
     Ok(stack.pop().unwrap())
 }
 
+fn build_fs_map(input: impl Iterator<Item = String>) -> anyhow::Result<Vec<u64>> {
+    let mut stack = Vec::new();
+    let mut directories = Vec::new();
+    for line in input {
+        if let Some(dir) = line.strip_prefix("$ cd ") {
+            if dir == ".." {
+                let size = stack.pop().unwrap();
+                if let Some(prev) = stack.last_mut() {
+                    *prev += size;
+                }
+                directories.push(size);
+            } else {
+                stack.push(0);
+            }
+        } else if line == "$ ls" || line.starts_with("dir") {
+            // no-op
+        } else {
+            let size: u64 = line
+                .split_once(' ')
+                .ok_or_else(|| anyhow!("Invalid input"))?
+                .0
+                .parse()?;
+            *stack.last_mut().unwrap() += size;
+        }
+    }
+    while let Some(val) = stack.pop() {
+        if let Some(prev) = stack.last_mut() {
+            *prev += val;
+        }
+        directories.push(val);
+    }
+    Ok(directories)
+}
+
 pub struct Part1;
 
 impl Part for Part1 {
@@ -172,10 +210,8 @@ impl Part for Part1 {
     const EXAMPLE_RESULT: Option<Answer> = Some(Num(95437));
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
-        let root = build_fs(input)?;
-        let mut sum = 0;
-        root.size_under_100k(&mut sum);
-        Ok(Num(sum))
+        let fs = build_fs_map(input)?;
+        Ok(Num(fs.into_iter().filter(|size| *size < 100_000).sum()))
     }
 }
 
@@ -187,11 +223,14 @@ impl Part for Part2 {
     const EXAMPLE_RESULT: Option<Answer> = Some(Num(24933642));
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
-        let root = build_fs(input)?;
-        let total_used = root.size();
+        let fs = build_fs_map(input)?;
+        // let root = build_fs(input)?;
+        let total_used = fs.last().unwrap();
         let required = 30_000_000 - (70000000 - total_used);
-        let mut size_deleted = None;
-        root.size_smallest_over(required, &mut size_deleted);
-        Ok(Num(size_deleted.unwrap()))
+        Ok(Num(fs
+            .into_iter()
+            .filter(|dir| *dir > required)
+            .min()
+            .unwrap()))
     }
 }
