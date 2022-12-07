@@ -1,9 +1,4 @@
-use std::str::FromStr;
-
-use aoc_framework::{
-    anyhow::{anyhow, bail, ensure},
-    *,
-};
+use aoc_framework::{anyhow::anyhow, *};
 
 pub struct Day7;
 
@@ -33,151 +28,20 @@ $ ls
 7214296 k
 ");
 
-#[derive(Debug)]
-enum Entry {
-    Dir { name: String, entries: Vec<Entry> },
-    File { size: u64 },
-}
-
-use Entry::*;
-
-impl Entry {
-    fn entries_mut(&mut self) -> Option<&mut Vec<Entry>> {
-        if let Dir { entries, .. } = self {
-            Some(entries)
-        } else {
-            None
-        }
-    }
-
-    #[allow(unused)]
-    fn size(&self) -> u64 {
-        match self {
-            Dir { entries, .. } => entries.iter().map(|entry| entry.size()).sum(),
-            File { size, .. } => *size,
-        }
-    }
-
-    #[allow(unused)]
-    fn size_under_100k(&self, sum: &mut u64) -> u64 {
-        match self {
-            Dir { entries, .. } => {
-                let size: u64 = entries.iter().map(|entry| entry.size_under_100k(sum)).sum();
-                if size < 100_000 {
-                    *sum += size;
-                }
-                size
-            }
-            File { size, .. } => *size,
-        }
-    }
-
-    #[allow(unused)]
-    fn size_smallest_over(&self, val: u64, current: &mut Option<u64>) -> u64 {
-        match self {
-            Dir { entries, .. } => {
-                let size: u64 = entries
-                    .iter()
-                    .map(|entry| entry.size_smallest_over(val, current))
-                    .sum();
-                if size >= val {
-                    let curr = current.unwrap_or(u64::MAX);
-                    if size < curr {
-                        *current = Some(size);
-                    }
-                }
-                size
-            }
-            File { size, .. } => *size,
-        }
-    }
-}
-
-impl FromStr for Entry {
-    type Err = anyhow::Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Some(name) = s.strip_prefix("dir ") {
-            return Ok(Dir {
-                name: name.to_string(),
-                entries: Vec::new(),
-            });
-        }
-        let Some((size, _)) = s.split_once(' ') else {
-            bail!("Invalid input");
-        };
-        Ok(File {
-            size: size.parse()?,
-        })
-    }
-}
-
-fn current_entry(stack: &mut [Entry]) -> anyhow::Result<&mut Vec<Entry>> {
-    stack
-        .last_mut()
-        .map(|e| e.entries_mut().unwrap())
-        .ok_or_else(|| anyhow!("Invalid input: reached root"))
-}
-
-fn pop(stack: &mut Vec<Entry>) -> anyhow::Result<&mut Vec<Entry>> {
-    let entry = stack.pop().unwrap();
-    let current = current_entry(stack)?;
-    current.push(entry);
-    Ok(current)
-}
-
-#[allow(unused)]
-fn build_fs(mut input: impl Iterator<Item = String>) -> anyhow::Result<Entry> {
-    ensure!(input.next().as_deref() == Some("$ cd /"));
-    let mut stack = vec![Dir {
-        name: "/".to_string(),
-        entries: Vec::new(),
-    }];
-    let mut input = input.peekable();
-    let mut current = current_entry(&mut stack)?;
-    while let Some(cmd) = input.next() {
-        if let Some(dir) = cmd.strip_prefix("$ cd ") {
-            if dir == ".." {
-                current = pop(&mut stack)?;
-                continue;
-            }
-            let ndx = current
-                .iter()
-                .position(|entry| {
-                    if let Dir { name, .. } = entry {
-                        name == dir
-                    } else {
-                        false
-                    }
-                })
-                .ok_or_else(|| anyhow!("Invalid input: directory {dir} not found"))?;
-            let entry = current.remove(ndx);
-            stack.push(entry);
-            current = current_entry(&mut stack)?;
-        } else if cmd == "$ ls" {
-            while input.peek().map(|l| !l.starts_with('$')) == Some(true) {
-                let line = input.next().unwrap();
-                current.push(line.parse()?);
-            }
-        } else {
-            bail!("Invalid input: could not process line {cmd}")
-        }
-    }
-    while stack.len() > 1 {
-        pop(&mut stack)?;
-    }
-    Ok(stack.pop().unwrap())
-}
-
 fn build_fs_map(input: impl Iterator<Item = String>) -> anyhow::Result<Vec<u64>> {
+    // current "path"
     let mut stack = Vec::new();
+    // sizes of processed directories
     let mut directories = Vec::new();
     for line in input {
         if let Some(dir) = line.strip_prefix("$ cd ") {
             if dir == ".." {
+                // pop current directory, add its size to parent
                 let size = stack.pop().unwrap();
                 if let Some(prev) = stack.last_mut() {
                     *prev += size;
                 }
+                // push it to the result
                 directories.push(size);
             } else {
                 stack.push(0);
@@ -185,14 +49,17 @@ fn build_fs_map(input: impl Iterator<Item = String>) -> anyhow::Result<Vec<u64>>
         } else if line == "$ ls" || line.starts_with("dir") {
             // no-op
         } else {
+            // file entry, parse its size
             let size: u64 = line
                 .split_once(' ')
                 .ok_or_else(|| anyhow!("Invalid input"))?
                 .0
                 .parse()?;
+            // add size to size of current directory
             *stack.last_mut().unwrap() += size;
         }
     }
+    // pop remaining directories, add their size to their parent each time
     while let Some(val) = stack.pop() {
         if let Some(prev) = stack.last_mut() {
             *prev += val;
@@ -224,9 +91,8 @@ impl Part for Part2 {
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
         let fs = build_fs_map(input)?;
-        // let root = build_fs(input)?;
         let total_used = fs.last().unwrap();
-        let required = 30_000_000 - (70000000 - total_used);
+        let required = 30_000_000 - (70_000_000 - total_used);
         Ok(Num(fs
             .into_iter()
             .filter(|dir| *dir > required)
