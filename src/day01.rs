@@ -29,19 +29,15 @@ impl Part for Part1 {
     const EXAMPLE_RESULT: Option<Answer> = Some(Num(24000));
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
-        let mut max = 0;
-        let mut current = 0;
-        // Add empty line to ensure last value is used
-        for line in input.chain(once(String::new())) {
-            if line.is_empty() {
-                max = current.max(max);
-                current = 0;
-                continue;
-            }
-            current += line.parse::<u64>()?;
-        }
-
-        Ok(Num(max))
+        Ok(Num(input
+            .map(|line| line.parse::<u64>().ok())
+            // Add empty value to ensure last sum is used
+            .chain(once(None))
+            .fold((0, 0), |(max, cur), n| match n {
+                Some(n) => (max, cur + n),
+                None => (max.max(cur), 0),
+            })
+            .0))
     }
 }
 
