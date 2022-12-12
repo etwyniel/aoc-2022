@@ -241,7 +241,7 @@ impl Part for Part2 {
             if *pix {
                 out.push('#');
             } else {
-                out.push('.');
+                out.push(' ');
             }
         }
         Ok(Str(std::borrow::Cow::Owned(out)))

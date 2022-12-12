@@ -79,7 +79,11 @@ impl Grid {
     }
 
     fn iter(&self) -> GridIter<'_> {
-        GridIter { grid: self, x: 0, y: 0 }
+        GridIter {
+            grid: self,
+            x: 0,
+            y: 0,
+        }
     }
 }
 
@@ -115,7 +119,9 @@ impl Part for Part1 {
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
         let grid = Grid::parse(input);
-        Ok(Num(grid.iter().filter(|&(x, y)| grid.is_visible(x, y)).count() as u64))
+        Ok(Num(
+            grid.iter().filter(|&(x, y)| grid.is_visible(x, y)).count() as u64,
+        ))
     }
 }
 
@@ -128,6 +134,10 @@ impl Part for Part2 {
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
         let grid = Grid::parse(input);
-        Ok(Num(grid.iter().map(|(x, y)| grid.scenic_score(x, y)).max().unwrap_or(0) as u64))
+        Ok(Num(grid
+            .iter()
+            .map(|(x, y)| grid.scenic_score(x, y))
+            .max()
+            .unwrap_or(0) as u64))
     }
 }
