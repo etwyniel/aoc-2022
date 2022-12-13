@@ -1,5 +1,3 @@
-use std::collections::BinaryHeap;
-
 use aoc_framework::*;
 
 pub struct Day12;
@@ -36,31 +34,6 @@ impl Tile {
         } else {
             1
         }
-    }
-}
-
-struct Entry {
-    pos: usize,
-    priority: u64,
-}
-
-impl std::cmp::PartialEq for Entry {
-    fn eq(&self, other: &Self) -> bool {
-        self.pos == other.pos
-    }
-}
-
-impl std::cmp::Eq for Entry {}
-
-impl std::cmp::PartialOrd for Entry {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        other.priority.partial_cmp(&self.priority)
-    }
-}
-
-impl std::cmp::Ord for Entry {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.priority.cmp(&self.priority)
     }
 }
 
@@ -108,13 +81,7 @@ impl Part for Part1 {
         let mut prev = vec![None; len];
         let mut unvisited = len;
         let mut q = vec![true; len];
-        let mut heap = BinaryHeap::with_capacity(len);
-        for i in 0..len {
-            let priority = if i == source { 0 } else { u64::MAX };
-            heap.push(Entry { pos: i, priority });
-        }
         while unvisited > 0 {
-            let Entry { pos, priority } = heap.pop().unwrap();
             let pos = dist
                 .iter()
                 .enumerate()
