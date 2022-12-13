@@ -168,18 +168,16 @@ impl Part for Part2 {
     const EXAMPLE_RESULT: Option<Answer> = Some(Num(140));
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
-        let packets = input.filter(|line| !line.is_empty()).collect::<Vec<_>>();
-        Ok(Num(DIVIDERS
-            .iter()
-            .enumerate()
-            .map(|(i, div)| {
-                packets
-                    .iter()
-                    .filter(|packet| compare_pair(div, packet) == Ordering::Greater)
-                    .count()
-                    + i
-                    + 1
-            } as u64)
-            .product()))
+        let mut div1_pos = 1;
+        let mut div2_pos = 2;
+        for packet in input {
+            if compare_pair(DIVIDERS[0], &packet) == Ordering::Greater {
+                div1_pos += 1;
+                div2_pos += 1;
+            } else if compare_pair(DIVIDERS[1], &packet) == Ordering::Greater {
+                div2_pos += 1;
+            }
+        }
+        Ok(Num(div1_pos * div2_pos))
     }
 }
