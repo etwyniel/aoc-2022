@@ -12,7 +12,7 @@ impl Part for Part1 {
     const EXAMPLE_RESULT: Option<Answer> = None;
 
     fn run(_input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
-        Ok(0)
+        Ok(Num(0))
     }
 }
 

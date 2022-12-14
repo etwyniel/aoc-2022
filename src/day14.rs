@@ -1,8 +1,4 @@
-use std::{
-    cmp::Ordering,
-    collections::{hash_map::Entry, HashMap},
-    ops::RangeInclusive,
-};
+use std::{cmp::Ordering, collections::VecDeque, ops::RangeInclusive};
 
 use aoc_framework::*;
 
@@ -28,40 +24,8 @@ struct Column {
 }
 
 impl Column {
-    fn can_move(&self, y: usize) -> bool {
-        for range in &self.ranges {
-            if *range.start() > y {
-                return true;
-            }
-            if range.contains(&y) {
-                return false;
-            }
-        }
-        true
-    }
-
     fn add_range(&mut self, range: RangeInclusive<usize>) {
         let (&l, &r) = (range.start(), range.end());
-        // for (i, existing) in self.ranges.iter_mut().enumerate() {
-        //     let (&el, &er) = (existing.start(), existing.end());
-        //     if el > r {
-        //         if el - r == 1 {
-        //             *existing = l..=er;
-        //             return;
-        //         }
-        //         self.ranges.insert(i, range);
-        //         return;
-        //     }
-        //     if l > er {
-        //         if l - r == 1 {
-        //             *existing = el..=r;
-        //             return;
-        //         }
-        //         continue;
-        //     }
-        //     *existing = (el.min(l))..=(er.max(r));
-        //     return;
-        // }
         match self.ranges.binary_search_by(|existing| {
             let (&el, &er) = (existing.start(), existing.end());
             if el > r && el - r > 1 {
@@ -116,64 +80,110 @@ impl Column {
     }
 }
 
-#[derive(Default)]
-struct Cave(HashMap<usize, Column>);
+#[derive(Debug, Clone)]
+struct Step {
+    x: usize,
+    y: usize,
+    ndx: usize,
+}
+
+struct Cave {
+    offset: usize,
+    columns: VecDeque<Option<Column>>,
+    steps: Vec<Step>,
+}
+
+impl Default for Cave {
+    fn default() -> Self {
+        let mut columns = VecDeque::new();
+        columns.push_back(None);
+        Cave {
+            offset: 500,
+            columns,
+            steps: vec![Step {
+                x: 500,
+                y: 0,
+                ndx: 0,
+            }],
+        }
+    }
+}
 
 impl Cave {
     fn add_line(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
+        let low_x = x1.min(x2);
+        let high_x = x1.max(x2);
+        if low_x < self.offset {
+            for _ in low_x..self.offset {
+                self.columns.push_front(None);
+            }
+            self.offset = low_x;
+        }
+        if high_x - self.offset > self.columns.len() {
+            for _ in (self.offset + self.columns.len())..=high_x {
+                self.columns.push_back(None);
+            }
+        }
         if x1 == x2 {
-            self.0
-                .entry(x1)
-                .or_default()
+            self.columns[x1 - self.offset]
+                .get_or_insert_with(Column::default)
                 .add_range((y1.min(y2))..=(y1.max(y2)));
         } else {
-            let (xl, xr) = (x1.min(x2), x1.max(x2));
-            for x in xl..=xr {
-                self.0.entry(x).or_default().add_range(y1..=y1);
+            for x in low_x..=high_x {
+                self.columns[x - self.offset]
+                    .get_or_insert_with(Column::default)
+                    .add_range(y1..=y1);
             }
         }
     }
 
     fn drop(&self, x: usize, y: usize) -> DropResult {
-        let Some(column) = self.0.get(&x) else {
+        if x < self.offset || x - self.offset >= self.columns.len() {
             return FellThrough;
-        };
-        column.drop(y)
+        }
+        match &self.columns[x - self.offset] {
+            None => FellThrough,
+            Some(col) => col.drop(y),
+        }
     }
 
     fn step(&mut self) -> bool {
-        let mut cur_x = 500;
-        let mut cur_y = 0;
-        let mut cur_ndx;
-        match self.drop(cur_x, cur_y) {
-            FellThrough | Blocked => return false,
-            Dropped { y, ndx } => {
-                cur_y = y;
-                cur_ndx = ndx;
-            }
-        }
-        loop {
-            match self.drop(cur_x - 1, cur_y + 1) {
-                FellThrough => return false,
-                Dropped { y, ndx } => {
-                    cur_x -= 1;
-                    cur_y = y;
-                    cur_ndx = ndx;
-                    continue;
+        // dbg!(&self.steps);
+        let mut step = loop {
+            let Some(last) = self.steps.last() else {
+            return false;
+        };
+            match self.drop(last.x, last.y) {
+                FellThrough => return true,
+                Blocked => {
+                    self.steps.pop();
                 }
-                Blocked => {}
-            }
-            match self.drop(cur_x + 1, cur_y + 1) {
-                FellThrough => return false,
                 Dropped { y, ndx } => {
-                    cur_x += 1;
-                    cur_y = y;
-                    cur_ndx = ndx;
-                    continue;
+                    let step = Step { x: last.x, y, ndx };
+                    self.steps.push(step.clone());
+                    break step;
                 }
-                Blocked => {}
             }
-            self.0.get_mut(&cur_x).unwrap().add_grain(cur_ndx, cur_y);
+        };
+        'outer: loop {
+            for dx in [-1, 1] {
+                let x = (step.x as isize + dx) as usize;
+                match self.drop(x, step.y + 1) {
+                    FellThrough => return false,
+                    Dropped { y, ndx } => {
+                        step.x = x;
+                        step.y = y;
+                        step.ndx = ndx;
+                        self.steps.push(step.clone());
+                        continue 'outer;
+                    }
+                    Blocked => {}
+                }
+            }
+            self.columns[step.x - self.offset]
+                .as_mut()
+                .unwrap()
+                .add_grain(step.ndx, step.y);
             return true;
         }
     }
