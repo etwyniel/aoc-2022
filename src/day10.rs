@@ -211,7 +211,16 @@ pub struct Part2;
 impl Part for Part2 {
     type D = Day10;
     const N: u8 = 2;
-    const EXAMPLE_RESULT: Option<Answer> = None;
+    const EXAMPLE_RESULT: Option<Answer> = Some(ConstStr(
+        r"
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  
+###   ###   ###   ###   ###   ###   ### 
+####    ####    ####    ####    ####    
+#####     #####     #####     #####     
+######      ######      ######      ####
+#######       #######       #######     
+",
+    ));
 
     fn run(input: impl Iterator<Item = String>) -> anyhow::Result<Answer> {
         let mut proc = Proc {
