@@ -144,12 +144,8 @@ impl Part for Part2 {
                 for sensor in &sensors {
                     let sensor_dist = sensor.pos.dist(&Point { x, y });
                     if sensor_dist <= sensor.beacon_dist {
-                        if x < sensor.pos.x {
-                            x += (sensor.pos.x - x) / 2 + 1;
-                        } else {
-                            let ydiff = y.abs_diff(sensor.pos.y) as i64;
-                            x = sensor.pos.x + sensor.beacon_dist as i64 - ydiff + 1;
-                        }
+                        let ydiff = y.abs_diff(sensor.pos.y) as i64;
+                        x = sensor.pos.x + sensor.beacon_dist as i64 - ydiff + 1;
                         continue 'xloop;
                     }
                 }
